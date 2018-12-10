@@ -15,7 +15,7 @@ function call (input) {
   for (let index = 0; index < list.length;) {
     const pos = checkReact(list, index)
     if (pos >= 0) {
-      const cut = list.splice(pos, 2)
+      list.splice(pos, 2)
       index = pos <= 0 ? 0 : pos - 1
     } else {
       console.log(list.length)
