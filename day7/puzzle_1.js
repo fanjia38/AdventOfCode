@@ -1,15 +1,3 @@
-// function getNextKeysPosition(dataMap, key, tree) {
-//   if (typeof dataMap[key] === 'undefined') {
-//     return [-1]
-//   }
-
-//   const posList = dataMap[key].map(row => {
-//     const nextKey = row.replace(/.*\sstep\s([A-Z])\scan.*/, '$1')
-//     return findDeep(tree, nextKey)
-//   }).filter(value => value >= 0)
-//   return posList
-// }
-
 function sort (inputData, tree, prevKeys, index) {
   if (prevKeys.length <= 0) {
     return tree
@@ -49,16 +37,6 @@ function sort (inputData, tree, prevKeys, index) {
   return tree
 }
 
-// function findDeep (obj, char, index = 0) {
-//   if (obj[index].char.indexOf(char) >= 0) {
-//     return index
-//   } else if (obj[index].next === null) {
-//     return -1
-//   } else {
-//     return findDeep(obj, char, obj[index].next)
-//   }
-// }
-
 function call (input) {
   const dataList = input.split('\n')
 
@@ -93,12 +71,7 @@ function call (input) {
   })
   tree = sort(inputData, tree, rootKeys, 1)
   console.log(tree)
-  // console.log(inputData)
-  // let tree = [{char: [Object.keys(dataMap)[0]], next: null}]
-  // Object.keys(dataMap).forEach(key => {
-  //   tree = sort(dataMap, tree, key)
-  // })
-  // console.log(tree)
+
   tree = tree.map(obj => {
     obj.char.sort((a, b) => a.charCodeAt(0) - b.charCodeAt(0))
     return obj.char.join('')
