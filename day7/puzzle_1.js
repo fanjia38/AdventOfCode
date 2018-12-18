@@ -1,80 +1,104 @@
-function getNextKeysPosition(dataMap, key, tree) {
-  if (typeof dataMap[key] === 'undefined') {
-    return [-1]
+// function getNextKeysPosition(dataMap, key, tree) {
+//   if (typeof dataMap[key] === 'undefined') {
+//     return [-1]
+//   }
+
+//   const posList = dataMap[key].map(row => {
+//     const nextKey = row.replace(/.*\sstep\s([A-Z])\scan.*/, '$1')
+//     return findDeep(tree, nextKey)
+//   }).filter(value => value >= 0)
+//   return posList
+// }
+
+function sort (inputData, tree, prevKeys, index) {
+  if (prevKeys.length <= 0) {
+    return tree
   }
 
-  const posList = dataMap[key].map(row => {
-    const nextKey = row.replace(/.*\sstep\s([A-Z])\scan.*/, '$1')
-    return findDeep(tree, nextKey)
-  }).filter(value => value >= 0)
-  return posList
-}
-
-function sort (dataMap, tree, key, prevIndex = undefined) {
-  let index = findDeep(tree, key, prevIndex)
-  if (index < 0 || index === prevIndex) {
-    const oldIndex = findDeep(tree, key)
-    if (oldIndex >= 0) {
-      const splitPos = tree[oldIndex].char.indexOf(key)
-      tree[oldIndex].char.splice(splitPos, 1)
-      index = Math.min(getNextKeysPosition(dataMap, key, tree))
-      index = index - 1 >= 0 ? index - 1 : 0
+  let currentKeys = []
+  prevKeys = prevKeys.filter(prevKey => {
+    if (inputData[prevKey].next.length <= 0) {
+      return false
     }
-
-    if (typeof prevIndex === 'undefined') {
-      index = Math.min(getNextKeysPosition(dataMap, key, tree))
-      index = index - 1 >= 0 ? index - 1 : 0
-    } else if (tree[prevIndex].next !== null) {
-      index = tree[prevIndex].next
-    } else {
-      tree.push({char: [], next: null})
-      index = tree.length - 1
-      tree[prevIndex].next = index
+    const nextList = inputData[prevKey].next.filter(nextKey => {
+      const canSetNumber = inputData[nextKey].prev.every(targetKey => {
+        return inputData[targetKey].pos !== null
+      })
+      // 設定可能なものをリストから prevKeys から取り除く
+      return canSetNumber
+    })
+    if (nextList.length > 0) {
+      currentKeys = currentKeys.concat(nextList)
+      if (inputData[prevKey].pos !== index - 1) {
+        const pos = inputData[prevKey].pos
+        const splicePos = tree[pos].char.indexOf(prevKey)
+        tree[pos].char.splice(splicePos, 1)
+        tree[index-1].char.push(prevKey)
+        inputData[prevKey].pos = index - 1
+      }
     }
-    tree[index].char.push(key)
-  }
-
-  if (typeof dataMap[key] === 'undefined') return tree
-
-  dataMap[key].forEach(row => {
-    const nextKey = row.replace(/.*\sstep\s([A-Z])\scan.*/, '$1')
-    tree = sort(dataMap, tree, nextKey, index)
+    return nextList.length === 0
   })
-
-  // console.log(tree)
+  currentKeys = currentKeys.filter((val, i, list) => list.indexOf(val) === i)
+  tree.push({char: currentKeys, next: null})
+  currentKeys.forEach(key => {
+    inputData[key].pos = index
+  })
+  tree[index-1].next = index
+  tree = sort(inputData, tree, [...prevKeys, ...currentKeys], index + 1)
   return tree
 }
 
-function findDeep (obj, char, index = 0) {
-  if (obj[index].char.indexOf(char) >= 0) {
-    return index
-  } else if (obj[index].next === null) {
-    return -1
-  } else {
-    return findDeep(obj, char, obj[index].next)
-  }
-}
+// function findDeep (obj, char, index = 0) {
+//   if (obj[index].char.indexOf(char) >= 0) {
+//     return index
+//   } else if (obj[index].next === null) {
+//     return -1
+//   } else {
+//     return findDeep(obj, char, obj[index].next)
+//   }
+// }
 
 function call (input) {
   const dataList = input.split('\n')
 
-  let dataMap = {}
+  let inputData = {}
   dataList.forEach(row => {
-    const char = row.replace(/Step\s([A-Z])\smust.*/,'$1')
-    if (typeof dataMap[char] === 'undefined') {
-      dataMap[char] = [row]
+    const [first, second] = row.replace(/Step\s([A-Z])\smust.*step\s([A-Z])\scan.*/,'$1 $2').split(' ')
+    if (typeof inputData[first] === 'undefined') {
+      inputData[first] = {next: [second], prev: [], pos: null}
     } else {
-      dataMap[char].push(row)
+      inputData[first].next.push(second)
     }
   })
-  console.log(dataMap)
+  Object.keys(inputData).forEach(key => {
+    inputData[key].next.forEach(nextKey => {
+      if (typeof inputData[nextKey] === 'undefined') {
+        inputData[nextKey] = {next: [], prev: [key], pos: null}
+      } else {
+        inputData[nextKey].prev.push(key)
+      }
+    })
+  })
+  // console.log(inputData)
 
   // 並び替え
-  let tree = [{char: [Object.keys(dataMap)[0]], next: null}]
-  Object.keys(dataMap).forEach(key => {
-    tree = sort(dataMap, tree, key)
+  let tree = [{char: [], next: null}]
+  const rootKeys = Object.keys(inputData).filter(key => {
+    return inputData[key].prev.length === 0
   })
+  rootKeys.forEach(key => {
+    tree[0].char.push(key)
+    inputData[key].pos = 0
+  })
+  tree = sort(inputData, tree, rootKeys, 1)
   console.log(tree)
+  // console.log(inputData)
+  // let tree = [{char: [Object.keys(dataMap)[0]], next: null}]
+  // Object.keys(dataMap).forEach(key => {
+  //   tree = sort(dataMap, tree, key)
+  // })
+  // console.log(tree)
   tree = tree.map(obj => {
     obj.char.sort((a, b) => a.charCodeAt(0) - b.charCodeAt(0))
     return obj.char.join('')
