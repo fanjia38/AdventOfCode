@@ -1,50 +1,34 @@
-function sort (dataMap) {
-  let answer = [{char: [], next: null}]
-
-  Object.keys(dataMap).forEach(key => {
-    // 探索対象の文字位置を検索 or セット
-    console.log(answer)
-    index = findDeep(answer, key)
-    if (index < 0) {
-      index = 0
-      answer[index].char.push(key)
+function sort (dataMap, tree, key, prevIndex = undefined) {
+  let index = findDeep(tree, key, prevIndex)
+  if (index < 0 || index === prevIndex) {
+    const oldIndex = findDeep(tree, key)
+    if (oldIndex >= 0) {
+      const splitPos = tree[oldIndex].char.indexOf(key)
+      tree[oldIndex].char.splice(splitPos, 1)
     }
-    console.log(dataMap[key])
 
-    dataMap[key].forEach(row => {
-      const nextKey = row.replace(/.*\sstep\s([A-Z])\scan.*/, '$1')
-      let nextIndex = findDeep(answer, nextKey, index)
-      if (nextIndex === index) {
-        const splitPos = answer[index].char.indexOf(nextKey)
-        answer[index].char.splice(splitPos, 1)
-        if (answer[index].next === null) {
-          answer[index].next = answer.length
-          answer.push({char: [], next: null})
-        }
-        answer[answer[index].next].char.push(nextKey)
-      } else if (nextIndex < 0) {
-        let prevIndex = findDeep(answer, nextKey)
+    if (typeof prevIndex === 'undefined') {
+      index = 0
+    } else if (tree[prevIndex].next !== null) {
+      index = tree[prevIndex].next
+    } else {
+      tree.push({char: [], next: null})
+      index = tree.length - 1
+      tree[prevIndex].next = index
+    }
+    tree[index].char.push(key)
+  }
 
-        if (prevIndex < 0) {
-          if (answer[index].next === null) {
-            answer[index].next = answer.length
-            answer.push({char: [], next: null})
-          }
-          nextIndex = answer[index].next
-          answer[nextIndex].char.push(nextKey)
-        } else {
-          const splitPos = answer[prevIndex].char.indexOf(nextKey)
-          answer[prevIndex].char.splice(splitPos, 1)
-          if (answer[index].next === null) {
-            answer[index].next = answer.length
-            answer.push({char: [], next: null})
-          }
-          answer[answer[index].next].char.push(nextKey)
-        }
-      }
-    })
+  if (typeof dataMap[key] === 'undefined') return tree
+
+  // let treePos = 0
+  dataMap[key].forEach(row => {
+    const beforeKey = row.replace(/.*\sstep\s([A-Z])\scan.*/, '$1')
+    tree = sort(dataMap, tree, beforeKey, index)
   })
-  return answer
+
+  // console.log(tree)
+  return tree
 }
 
 function findDeep (obj, char, index = 0) {
@@ -71,16 +55,19 @@ function call (input) {
       dataMap[char].push(row)
     }
   })
-  // console.log(dataMap)
+  console.log(dataMap)
 
-  let answer = sort(dataMap, dataList)
-
-  answer = answer.map(obj => {
-    obj.char.sort((a, b) => a.charCodeAt(0) - b.charCodeAt(0))
-    return obj.char
+  // 並び替え
+  let tree = [{char: [Object.keys(dataMap)[0]], next: null}]
+  Object.keys(dataMap).forEach(key => {
+    tree = sort(dataMap, tree, key)
   })
-  console.log(answer)
-  console.log(answer.join(''))
+  console.log(tree)
+  tree = tree.map(obj => {
+    obj.char.sort((a, b) => a.charCodeAt(0) - b.charCodeAt(0))
+    return obj.char.join('')
+  })
+  console.log(tree.join(''))
 }
 
 // input
