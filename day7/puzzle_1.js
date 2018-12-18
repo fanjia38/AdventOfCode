@@ -1,3 +1,15 @@
+function getNextKeysPosition(dataMap, key, tree) {
+  if (typeof dataMap[key] === 'undefined') {
+    return [-1]
+  }
+
+  const posList = dataMap[key].map(row => {
+    const nextKey = row.replace(/.*\sstep\s([A-Z])\scan.*/, '$1')
+    return findDeep(tree, nextKey)
+  }).filter(value => value >= 0)
+  return posList
+}
+
 function sort (dataMap, tree, key, prevIndex = undefined) {
   let index = findDeep(tree, key, prevIndex)
   if (index < 0 || index === prevIndex) {
@@ -5,10 +17,13 @@ function sort (dataMap, tree, key, prevIndex = undefined) {
     if (oldIndex >= 0) {
       const splitPos = tree[oldIndex].char.indexOf(key)
       tree[oldIndex].char.splice(splitPos, 1)
+      index = Math.min(getNextKeysPosition(dataMap, key, tree))
+      index = index - 1 >= 0 ? index - 1 : 0
     }
 
     if (typeof prevIndex === 'undefined') {
-      index = 0
+      index = Math.min(getNextKeysPosition(dataMap, key, tree))
+      index = index - 1 >= 0 ? index - 1 : 0
     } else if (tree[prevIndex].next !== null) {
       index = tree[prevIndex].next
     } else {
@@ -21,10 +36,9 @@ function sort (dataMap, tree, key, prevIndex = undefined) {
 
   if (typeof dataMap[key] === 'undefined') return tree
 
-  // let treePos = 0
   dataMap[key].forEach(row => {
-    const beforeKey = row.replace(/.*\sstep\s([A-Z])\scan.*/, '$1')
-    tree = sort(dataMap, tree, beforeKey, index)
+    const nextKey = row.replace(/.*\sstep\s([A-Z])\scan.*/, '$1')
+    tree = sort(dataMap, tree, nextKey, index)
   })
 
   // console.log(tree)
@@ -43,8 +57,6 @@ function findDeep (obj, char, index = 0) {
 
 function call (input) {
   const dataList = input.split('\n')
-  // const alpha = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
-  // const alpha = ['A', 'B', 'C', 'D', 'E', 'F']
 
   let dataMap = {}
   dataList.forEach(row => {
