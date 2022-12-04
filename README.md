@@ -1,5 +1,8 @@
 # AdventOfCode
 
+## 2022
+https://adventofcode.com/2022
+
 ## 2019
 https://adventofcode.com/2019/
 
