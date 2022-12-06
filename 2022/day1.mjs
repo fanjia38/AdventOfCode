@@ -7,6 +7,7 @@ const filePath = program.args[0]
 const data = await fs.readFile(filePath, {encoding: 'utf8'})
 const dataList = data.split('\n\n').map(line => line.split('\n'))
 
+
 const maxCalorie = (dataList) => {
   return dataList.reduce((prev, current) => {
     const sum = current.reduce((prev, current) => prev + parseInt(current), 0)
@@ -14,7 +15,7 @@ const maxCalorie = (dataList) => {
   }, 0)
 }
 
-console.log('max...', maxCalorie(dataList))
+console.log('1...', maxCalorie(dataList))
 
 const compareFn = (a, b) => {
   const sumA = a.reduce((prev, current) => prev + parseInt(current), 0)
@@ -27,4 +28,4 @@ const summary = sortedList.slice(0, 3).reduce((prev, current) => {
   const sum = current.reduce((innerPrev, innerCurrent) => innerPrev + parseInt(innerCurrent), 0)
   return prev + sum
 }, 0)
-console.log(summary)
+console.log('2...', summary)
